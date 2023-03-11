@@ -154,7 +154,7 @@ const addRole = () => {
     })
 }
 
-const addEmployee = () => {
+const addEmployee = (roleSelect, employees) => {
   inquirer
     .prompt([
       {
@@ -217,7 +217,7 @@ const addEmployee = () => {
 
 }
 
-const updateEmployeeRole = () => {
+const updateEmployeeRole = (roleSelect, employees) => {
   inquirer
     .prompt([
       {
@@ -252,8 +252,7 @@ const updateEmployeeRole = () => {
           }
 
           const sqlUpdateRole = `UPDATE employees SET role_id = ? WHERE id = ?;`
-          const params = [empRes[0].employees_id, roleRes[0].roles_id];
-          console.log(params)
+          const params = [roleRes[0].roles_id, empRes[0].employees_id,];
     
           db.query(sqlUpdateRole, params, (err, result) => {
             if (err) {
@@ -268,7 +267,7 @@ const updateEmployeeRole = () => {
   })
 };
 
-const updateEmployeeManager = () => {
+const updateEmployeeManager = (employees) => {
   inquirer
     .prompt([
       {
@@ -372,13 +371,13 @@ const init = () => {
           addRole();
           break;
         case 'Add An Employee':
-          addEmployee();
+          addEmployee(roleSelect, employees);
           break;
         case 'Update Employee Role':
-          updateEmployeeRole();
+          updateEmployeeRole(roleSelect, employees);
           break;
         case 'Update Employee Manager':
-          updateEmployeeManager();
+          updateEmployeeManager(employees);
           break;
         case 'Exit':
           process.exit(0)
