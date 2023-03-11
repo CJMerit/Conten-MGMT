@@ -15,13 +15,10 @@ const initialChoices = [
     'Add A Department',
     'Add A Role',
     'Add An Employee',
-    "Update Employee's Role",
+    'Update Employee Role',
+    'Update Employee Manager',
     'Exit'
 ]
-
-let roleSelect = [];
-let employees = [];
-
 
 // Express middleware
 app.use(express.urlencoded({ extended: false }));
@@ -220,7 +217,7 @@ const addEmployee = () => {
 
 }
 
-const updateEmployee = () => {
+const updateEmployeeRole = () => {
   inquirer
     .prompt([
       {
@@ -240,7 +237,7 @@ const updateEmployee = () => {
       let name = res.employeeName.split(' ')
       const sqlEmp = `SELECT employees.id AS employees_id FROM employees WHERE employees.first_name = '${name[0]}' AND employees.last_name = '${name[1]}'`
 
-      db.query(sqlEmp, (err, empResult) => {
+      db.query(sqlEmp, (err, empRes) => {
         if (err) {
           console.log('Something went wrong!');
           return;
@@ -253,13 +250,12 @@ const updateEmployee = () => {
             console.log('Something went wrong!');
             return;
           }
-          console.log(roleRes)
 
-          const sqlUpdateRole = `UPDATE employees SET role_id = ? WHERE id = ?`;
-          const params = [empResult[0].employees_id, roleRes[0].roles_id];
+          const sqlUpdateRole = `UPDATE employees SET role_id = ? WHERE id = ?;`
+          const params = [empRes[0].employees_id, roleRes[0].roles_id];
           console.log(params)
     
-          db.query(sql, params, (err, result) => {
+          db.query(sqlUpdateRole, params, (err, result) => {
             if (err) {
               console.log('Something went wrong!');
               return;
@@ -272,7 +268,60 @@ const updateEmployee = () => {
   })
 };
 
+const updateEmployeeManager = () => {
+  inquirer
+    .prompt([
+      {
+        type: 'list',
+        message: "Select employee to change:",
+        choices: employees,
+        name: 'employeeName'
+      },
+      {
+        type: 'list',
+        message: "Select employee's new manager:",
+        choices: employees,
+        name: 'managerName'
+      }
+    ])
+    .then((res) => {
+      let empName = res.employeeName.split(' ')
+      const sqlEmp = `SELECT employees.id AS employees_id FROM employees WHERE employees.first_name = '${empName[0]}' AND employees.last_name = '${empName[1]}'`
+      
+      db.query(sqlEmp, (err, empRes) => {
+        if (err) {
+          console.log('Something went wrong!');
+          return;
+        }
+
+        let managerName = res.managerName.split(' ')
+        const sqlManager = `SELECT employees.id AS employees_id FROM employees WHERE employees.first_name = '${managerName[0]}' AND employees.last_name = '${managerName[1]}'`
+
+        db.query(sqlManager, (err, managerRes) => {
+          if (err) {
+            console.log('Something went wrong!');
+            return;
+          }
+          
+          const sqlUpdateManager = `UPDATE employees SET manager_id = ? WHERE id = ?;`
+          const params = [managerRes[0].employees_id, empRes[0].employees_id];
+
+          db.query(sqlUpdateManager, params, (err, result) => {
+            if (err) {
+              console.log('Something went wrong!');
+              return;
+            }
+            console.log(`Set ${managerName[0]} ${managerName[1]} as ${empName[0]} ${empName[1]}'s manager`)
+            init()
+          })
+        })
+      })
+    })
+}
+
 const init = () => {
+  let roleSelect = [];
+  let employees = [];
   const sqlRoles = `SELECT roles.title FROM roles;`
 
   db.query(sqlRoles, (err, result) => {
@@ -325,8 +374,11 @@ const init = () => {
         case 'Add An Employee':
           addEmployee();
           break;
-        case "Update Employee's Role":
-          updateEmployee();
+        case 'Update Employee Role':
+          updateEmployeeRole();
+          break;
+        case 'Update Employee Manager':
+          updateEmployeeManager();
           break;
         case 'Exit':
           process.exit(0)
